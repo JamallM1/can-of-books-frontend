@@ -12,7 +12,8 @@ class BestBooks extends React.Component {
       displayForm: false
     }
   }
-  handleBookSubmit = (e) => {
+  
+  handleAddBook = (e) => {
     e.preventDefault();
     let newBook = {
       title: e.target.title.value,
@@ -21,27 +22,45 @@ class BestBooks extends React.Component {
     }
     this.postBooks(newBook);
   }
+
+  handleDeleteBook = (id)=>{
+    this.deleteBooks(id);
+  }
+
   handleClick = () => {
     this.setState({
       displayForm: true
     })
   }
+
   handleOnHide = () => {
     this.setState({
       displayForm: false
     })
   }
+
   postBooks = async (newBookObj) => {
-    console.log(newBookObj);
     try {
       let url = `${process.env.REACT_APP_SERVER}/books`;
       let createdBook = await axios.post(url, newBookObj);
-
       this.setState({
         books: [...this.state.books, createdBook.data]
       });
     } catch (error) {
       console.log('we have an error creating books: ', error.response.data);
+    }
+  }
+
+  deleteBooks = async (id)=>{
+    try{
+      let url=`${process.env.REACT_APP_SERVER}/books/${id}`;
+      await axios.delete(url);
+      let updatedBooks=this.state.books.filter(book=>book._id !== id);
+      this.setState({
+        books: updatedBooks
+      })
+    }catch(error){
+      console.log('we have an error deleting books: ', error.response.data);
     }
   }
 
@@ -63,8 +82,7 @@ class BestBooks extends React.Component {
   render() {
     let books = this.state.books.map(book => {
       return (
-        <Carousel.Item key={book._id}
-        >
+        <Carousel.Item key={book._id}>
           <img
             src="https://via.placeholder.com/300"
             alt="placeholder"
@@ -73,6 +91,7 @@ class BestBooks extends React.Component {
             <h3>{book.title}</h3>
             <p>{book.description}</p>
           </Carousel.Caption>
+          <Button type="submit">Delete</Button>
         </Carousel.Item>
       )
     });
@@ -80,11 +99,10 @@ class BestBooks extends React.Component {
     return (
       <>
         <h2>My Essential Lifelong Learning &amp; Formation Shelf</h2>
-
         {this.state.books.length ? (
           <>
             <h2>Books</h2>
-            <Carousel>
+            <Carousel onSubmit={this.handleDeleteBook()}>
               {books}
             </Carousel>
           </>
@@ -95,7 +113,6 @@ class BestBooks extends React.Component {
         <Button onClick={this.handleClick}>
           Add Book
         </Button>
-        {/* {this.state.displayForm ?( */}
         <>
           <Modal as="modal" show={this.state.displayForm} onHide={this.handleOnHide}>
             <Modal.Header closeButton>
@@ -103,13 +120,13 @@ class BestBooks extends React.Component {
                 Add Book
               </Modal.Title>
               <Modal.Body>
-                <Form onSubmit={this.handleBookSubmit}>
+                <Form onSubmit={this.handleAddBook}>
                   <Form.Group>
                     <Form.Label>Book Title</Form.Label>
-                    <Form.Control name="title" type="text" placeholder="title" />
+                    <Form.Control name="title" type="text" placeholder="title"/>
                     <Form.Label>Description</Form.Label>
-                    <Form.Control name="description" type="text" placeholder="Description" />
-                    <Form.Check name="status" type="checkbox" label="Status" />
+                    <Form.Control name="description" type="text" placeholder="Description"/>
+                    <Form.Check name="status" type="checkbox" label="Status"/>
                   </Form.Group>
                   <Button type="submit">Add Book</Button>
                 </Form>
@@ -117,7 +134,6 @@ class BestBooks extends React.Component {
             </Modal.Header>
           </Modal>
         </>
-        {/* ): ('')} */}
       </>
     );
   }
