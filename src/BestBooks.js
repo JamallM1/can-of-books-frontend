@@ -3,7 +3,6 @@ import axios from 'axios';
 import Alert from 'react-bootstrap/Alert';
 import Carousel from 'react-bootstrap/Carousel'
 import { Button, Modal, Form } from 'react-bootstrap';
-import Book from './Book'
 
 class BestBooks extends React.Component {
   constructor(props) {
@@ -20,19 +19,20 @@ class BestBooks extends React.Component {
       description: e.target.description.value,
       status: e.target.status.checked
     }
-    this.postBooks(newBook)
+    this.postBooks(newBook);
   }
   handleClick = () => {
     this.setState({
       displayForm: true
     })
   }
-  handleOnHide =() => {
+  handleOnHide = () => {
     this.setState({
       displayForm: false
     })
   }
   postBooks = async (newBookObj) => {
+    console.log(newBookObj);
     try {
       let url = `${process.env.REACT_APP_SERVER}/books`;
       let createdBook = await axios.post(url, newBookObj);
@@ -61,13 +61,20 @@ class BestBooks extends React.Component {
   }
 
   render() {
-    console.log(this.state.displayForm);
     let books = this.state.books.map(book => {
-      return <Book
-        key={book._id}
-        title={book.title}
-        desc={book.description}
-      ></Book>
+      return (
+        <Carousel.Item key={book._id}
+        >
+          <img
+            src="https://via.placeholder.com/300"
+            alt="placeholder"
+          />
+          <Carousel.Caption>
+            <h3>{book.title}</h3>
+            <p>{book.description}</p>
+          </Carousel.Caption>
+        </Carousel.Item>
+      )
     });
 
     return (
@@ -89,28 +96,28 @@ class BestBooks extends React.Component {
           Add Book
         </Button>
         {/* {this.state.displayForm ?( */}
-          <>
-            <Modal as ="modal" show={this.state.displayForm} onHide={this.handleOnHide}>
-              <Modal.Header closeButton>
-                <Modal.Title>
-                  Add Book
-                </Modal.Title>
-                <Modal.Body>
-                  <Form>
-                    <Form.Group>
-                      <Form.Label>Book Title</Form.Label>
-                      <Form.Control type="text" placeholder="title" />
-                      <Form.Label>Description</Form.Label>
-                      <Form.Control type="text" placeholder="Description" />
-                      <Form.Check type="checkbox" label="Status" />
-                    </Form.Group>
-                    <Button type="submit">Add Book</Button>
-                  </Form>
-                </Modal.Body>
-              </Modal.Header>
-            </Modal>
-          </>
-          {/* ): ('')} */}
+        <>
+          <Modal as="modal" show={this.state.displayForm} onHide={this.handleOnHide}>
+            <Modal.Header closeButton>
+              <Modal.Title>
+                Add Book
+              </Modal.Title>
+              <Modal.Body>
+                <Form onSubmit={this.handleBookSubmit}>
+                  <Form.Group>
+                    <Form.Label>Book Title</Form.Label>
+                    <Form.Control name="title" type="text" placeholder="title" />
+                    <Form.Label>Description</Form.Label>
+                    <Form.Control name="description" type="text" placeholder="Description" />
+                    <Form.Check name="status" type="checkbox" label="Status" />
+                  </Form.Group>
+                  <Button type="submit">Add Book</Button>
+                </Form>
+              </Modal.Body>
+            </Modal.Header>
+          </Modal>
+        </>
+        {/* ): ('')} */}
       </>
     );
   }
