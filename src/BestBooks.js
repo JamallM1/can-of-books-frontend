@@ -1,15 +1,18 @@
 import React from 'react';
 import axios from 'axios';
-import Alert from 'react-bootstrap/Alert';
-import Carousel from 'react-bootstrap/Carousel'
-import { Button, Modal, Form } from 'react-bootstrap';
+import { Alert, Button, Modal, Form } from 'react-bootstrap';
+import Books from './Books'
+import UpdateForm from './UpdateForm';
+import './BestBooks.css';
 
 class BestBooks extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       books: [],
-      displayForm: false
+      displayForm: false,
+      displayUpdate: false,
+      bookToUpdate: null
     }
   }
   
@@ -20,22 +23,27 @@ class BestBooks extends React.Component {
       description: e.target.description.value,
       status: e.target.status.checked
     }
+    this.handleOnHide();
     this.postBooks(newBook);
   }
 
-  handleDeleteBook = (id)=>{
-    this.deleteBooks(id);
-  }
-
-  handleClick = () => {
+  handleClickAdd = () => {
     this.setState({
       displayForm: true
     })
   }
 
+  handleClickUpdate = (book) => {
+    this.setState({
+      displayUpdate: true,
+      bookToUpdate: book
+    })
+  }
+
   handleOnHide = () => {
     this.setState({
-      displayForm: false
+      displayForm: false,
+      displayUpdate: false
     })
   }
 
@@ -64,6 +72,23 @@ class BestBooks extends React.Component {
     }
   }
 
+  updateBooks = async (bookToUpdate) => {
+    try {
+      let url = `${process.env.REACT_APP_SERVER}/books/${bookToUpdate._id}`;
+      let updatedBook = await axios.put(url, bookToUpdate);
+      let updatedBookArray = this.state.books.map(existingBook => {
+        return existingBook._id === bookToUpdate._id
+          ? updatedBook.data
+          : existingBook
+      });
+      this.setState({
+        books: updatedBookArray
+      });
+    } catch(error) {
+      console.log('we have an error updating books: ', error.response.data);
+    }
+  }
+
   getBooks = async () => {
     try {
       let results = await axios.get(`${process.env.REACT_APP_SERVER}/books`);
@@ -80,37 +105,25 @@ class BestBooks extends React.Component {
   }
 
   render() {
-    let books = this.state.books.map(book => {
-      return (
-        <Carousel.Item key={book._id}>
-          <img
-            src="https://via.placeholder.com/300"
-            alt="placeholder"
-          />
-          <Carousel.Caption>
-            <h3>{book.title}</h3>
-            <p>{book.description}</p>
-          </Carousel.Caption>
-          <Button type="submit">Delete</Button>
-        </Carousel.Item>
-      )
-    });
-
     return (
       <>
         <h2>My Essential Lifelong Learning &amp; Formation Shelf</h2>
         {this.state.books.length ? (
           <>
             <h2>Books</h2>
-            <Carousel onSubmit={this.handleDeleteBook()}>
-              {books}
-            </Carousel>
+            <Books
+            books={this.state.books}
+            deleteBooks={this.deleteBooks}
+            updateBooks={this.updateBooks}
+            handleClickUpdate={this.handleClickUpdate}
+            bookToUpdate={this.state.bookToUpdate}
+            ></Books>
           </>
         ) : (
           <Alert variant="danger">Book collection empty.</Alert>
         )
         }
-        <Button onClick={this.handleClick}>
+        <Button onClick={this.handleClickAdd}>
           Add Book
         </Button>
         <>
@@ -130,6 +143,22 @@ class BestBooks extends React.Component {
                   </Form.Group>
                   <Button type="submit">Add Book</Button>
                 </Form>
+              </Modal.Body>
+            </Modal.Header>
+          </Modal>
+        </>
+        <>
+          <Modal as="modal" show={this.state.displayUpdate} onHide={this.handleOnHide}>
+            <Modal.Header closeButton>
+              <Modal.Title>
+                Update Book
+              </Modal.Title>
+              <Modal.Body>
+                <UpdateForm
+                bookToUpdate={this.state.bookToUpdate}
+                handleOnHide={this.handleOnHide}
+                updateBooks={this.updateBooks}
+                ></UpdateForm>
               </Modal.Body>
             </Modal.Header>
           </Modal>
